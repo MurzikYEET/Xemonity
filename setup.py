@@ -14,7 +14,7 @@ setup(
   description='Libraly for simple menu with chosing',
   long_description=readme(),
   long_description_content_type='text/markdown',
-  url='no',
+  url='https://github.com/MurzikYEET/Xemonity',
   packages=find_packages(),
   install_requires=['pynput'],
   classifiers=[
@@ -24,7 +24,7 @@ setup(
   ],
   keywords='menu choose choice',
   project_urls={
-    "No" : "no"
+    "GitHub" : "https://github.com/MurzikYEET/Xemonity"
   },
   python_requires='>=3.6'
 )

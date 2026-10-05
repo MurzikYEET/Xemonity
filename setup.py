@@ -7,7 +7,7 @@ def readme():
 
 
 setup(
-  name='Xemonity',
+  name='xemonity',
   version='1.0',
   author='murzik_kukushnik',
   author_email='siniykoshara@gmail.com',

@@ -8,7 +8,7 @@ def readme():
 
 setup(
   name='xemonity',
-  version='1.1',
+  version='2.0',
   author='murzik_kukushnik',
   author_email='siniykoshara@gmail.com',
   description='Libraly for simple menu with chosing',

@@ -66,6 +66,7 @@ class XemonityAM:
             self.update_screen()
             with keyboard.Listener(on_press=self.on_press, on_release=self.on_release) as listener:listener.join()
             if os.name != "nt":termios.tcflush(sys.stdin.fileno(), termios.TCIFLUSH)
+            input()
             if self.elements[self.cursor] == ":Cancel":return ":CANCELED"
             else:return self.elements[self.cursor]
         finally:

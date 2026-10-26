@@ -1,5 +1,5 @@
 # Xemonity
-Xemonity - Python3 lib for simple choose menu ~~mained on pynput ~~
+Xemonity - Python3 lib for simple choose menu ~~mained on pynput~~
 ## How to use?
 Code look as 
 ```python

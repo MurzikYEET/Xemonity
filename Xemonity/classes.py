@@ -1,8 +1,11 @@
-from pynput import keyboard
 from time import sleep as delay
 import sys
 import os
-import termios
+if os.name == "nt":
+    import msvcrt
+else:
+    import termios
+    import tty
 
 def open_alt_screen():
     sys.stdout.write("\x1b[?1049h")
@@ -13,10 +16,44 @@ def close_alt_screen():
     sys.stdout.write("\x1b[?1049l")
 
 def clear_screen():
-    if os.name == 'nt':
+    if is_windows():
         os.system('cls')
     else:
         os.system('clear')
+
+def get_key_posix(): #for unix-like os (MacOS,Linux,*BSD and other)
+    fd = sys.stdin.fileno()
+    old_settings = termios.tcgetattr(fd)
+    try:
+        tty.setraw(fd)
+        ch = sys.stdin.read(1)
+        if ch == '\x1b': #Up or down
+            ch += sys.stdin.read(2)
+            if ch == '\x1b[A': return 'UP'
+            if ch == '\x1b[B': return 'DOWN'
+            return None
+        elif ch == '\r': # Enter
+            return 'ENTER'
+        elif ch == '\x03': # Ctrl+C
+            raise KeyboardInterrupt
+        return ch
+    finally:
+        termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+
+def get_key_nt(): #for NT-like os (Windows)
+    ch = msvcrt.getch()
+    if ch in (b'\x00', b'\xe0'): #Up or down
+        ch = msvcrt.getch()
+        if ch == b'H': return 'UP'
+        if ch == b'P': return 'DOWN'
+        return None
+
+    if ch == b'\r': return 'ENTER' #Enter
+    if ch == b'\x03': raise KeyboardInterrupt # Ctrl+C
+        
+    return ch.decode('utf-8', errors='ignore')
+
+def is_windows():return os.name == "nt"
 
 class XemonityAM:
     def __init__(self,elements:list,title:str):
@@ -34,28 +71,6 @@ class XemonityAM:
             if i == self.cursor: print(">>",end="")
             print(self.elements[i])
         delay(intertime)
-
-    def on_press(self,key:keyboard.Key):
-        try:
-            if key == keyboard.Key.down:
-                self.cursor += 1
-                if self.cursor >= len(self.elements):
-                    self.cursor = 0
-                self.update_screen()
-            elif key == keyboard.Key.up:
-                self.cursor -= 1
-                if self.cursor <= -1:
-                    self.cursor = len(self.elements)-1
-                self.update_screen()
-            elif key == keyboard.Key.enter:
-                self.returned = self.elements[self.cursor]
-                return False
-        except AttributeError:
-            pass
-    def on_release(self,key):
-        if key == keyboard.Key.esc:
-            return False
-
     def relist(self,newlist:list):
         self.elements = newlist
         self.cursor = 0
@@ -63,11 +78,23 @@ class XemonityAM:
         try:
             self.cursor = 0
             open_alt_screen()
-            self.update_screen()
-            with keyboard.Listener(on_press=self.on_press, on_release=self.on_release) as listener:listener.join()
-            if os.name != "nt":termios.tcflush(sys.stdin.fileno(), termios.TCIFLUSH)
-            input()
-            if self.elements[self.cursor] == ":Cancel":return ":CANCELED"
-            else:return self.elements[self.cursor]
-        finally:
+            while True:
+                self.update_screen()
+
+                if is_windows():pressed = get_key_nt()
+                else:pressed = get_key_posix()
+
+                if pressed == "DOWN":
+                    self.cursor += 1
+                    if self.cursor >= len(self.elements):self.cursor = 0
+                    self.update_screen()
+                elif pressed == "UP":
+                    self.cursor -= 1
+                    if self.cursor <= -1:self.cursor = len(self.elements)-1
+                    self.update_screen()
+                elif pressed == "ENTER":
+                    close_alt_screen()
+                    return self.elements[self.cursor]
+        except:
             close_alt_screen()
+            return ":CANCELED"

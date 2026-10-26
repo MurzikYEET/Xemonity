@@ -8,7 +8,7 @@ def readme():
 
 setup(
   name='xemonity',
-  version='2.1',
+  version='3.0',
   author='murzik_kukushnik',
   author_email='siniykoshara@gmail.com',
   description='Libraly for simple menu with chosing',
@@ -16,7 +16,7 @@ setup(
   long_description_content_type='text/markdown',
   url='https://github.com/MurzikYEET/Xemonity',
   packages=find_packages(),
-  install_requires=['pynput'],
+  install_requires=[],
   classifiers=[
     'Programming Language :: Python :: 3.11',
     'License :: OSI Approved :: MIT License',

@@ -1,5 +1,5 @@
 # Xemonity
-Xemonity - Python3 lib for simple menu with choose mained on pynput 
+Xemonity - Python3 lib for simple choose menu ~~mained on pynput ~~
 ## How to use?
 Code look as 
 ```python
@@ -21,12 +21,12 @@ Three
 `Xemonity.XemonityAM(elements:list,title:str)`
 Main class for menu
 1. `XemonityAM.cursor` : int var : return a current selected element index
-2. `XemonityAM.title` : str var : just a title, shows over elements
+2. `XemonityAM.title` : str var : just a title, shows before elements
 3. `XemonityAM.elements` : list var : list of elements (this is not recommended for modification)
 4. `XemonityAM.relist(newlist:list)` : None func : change list of elements
 5. `XemonityAM.show_sync()` : str func : show menu and return choosed element, if choosen ":Cancel" then method returns ":CANCELED"
 Other methods not for you
 ## Credits
-[https://pypi.org/user/moses.palmer/] : made pynput lib
+~~[https://pypi.org/user/moses.palmer/] : made pynput lib~~ Pynput not more used
 ## License
 Licensed under MIT license

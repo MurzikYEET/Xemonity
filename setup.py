@@ -8,10 +8,10 @@ def readme():
 
 setup(
   name='xemonity',
-  version='3.0',
+  version='4.0',
   author='murzik_kukushnik',
   author_email='siniykoshara@gmail.com',
-  description='Libraly for simple menu with chosing',
+  description='Libraly for simple terminal ui',
   long_description=readme(),
   long_description_content_type='text/markdown',
   url='https://github.com/MurzikYEET/Xemonity',
@@ -22,7 +22,7 @@ setup(
     'License :: OSI Approved :: MIT License',
     'Operating System :: OS Independent'
   ],
-  keywords='menu choose choice',
+  keywords='menu ui gui tui',
   project_urls={
     "GitHub" : "https://github.com/MurzikYEET/Xemonity"
   },

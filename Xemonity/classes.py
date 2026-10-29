@@ -1,73 +1,22 @@
 from time import sleep as delay
-import sys
-import os
-if os.name == "nt":
-    import msvcrt
-else:
-    import termios
-    import tty
-
-def open_alt_screen():
-    sys.stdout.write("\x1b[?1049h")
-    clear_screen()
-
-def close_alt_screen():
-    #clear_screen()
-    sys.stdout.write("\x1b[?1049l")
-
-def clear_screen():
-    if is_windows():
-        os.system('cls')
-    else:
-        os.system('clear')
-
-def get_key_posix(): #for unix-like os (MacOS,Linux,*BSD and other)
-    fd = sys.stdin.fileno()
-    old_settings = termios.tcgetattr(fd)
-    try:
-        tty.setraw(fd)
-        ch = sys.stdin.read(1)
-        if ch == '\x1b': #Up or down
-            ch += sys.stdin.read(2)
-            if ch == '\x1b[A': return 'UP'
-            if ch == '\x1b[B': return 'DOWN'
-            return None
-        elif ch == '\r': # Enter
-            return 'ENTER'
-        elif ch == '\x03': # Ctrl+C
-            raise KeyboardInterrupt
-        return ch
-    finally:
-        termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
-
-def get_key_nt(): #for NT-like os (Windows)
-    ch = msvcrt.getch()
-    if ch in (b'\x00', b'\xe0'): #Up or down
-        ch = msvcrt.getch()
-        if ch == b'H': return 'UP'
-        if ch == b'P': return 'DOWN'
-        return None
-
-    if ch == b'\r': return 'ENTER' #Enter
-    if ch == b'\x03': raise KeyboardInterrupt # Ctrl+C
-        
-    return ch.decode('utf-8', errors='ignore')
-
-def is_windows():return os.name == "nt"
+try:
+    from .methods import *
+except:
+    from methods import *
 
 class XemonityAM:
-    def __init__(self,elements:list,title:str):
+    def __init__(self,elements:list,title:str,append_cancel=True):
+        """WARNING : this class deprecated and has been deleted in version 5.0, please use XmntUIList with Button class"""
         self.cursor = 0
         self.elements = elements
-        self.elements.append(":Cancel")
+        if append_cancel:self.elements.append(":Cancel")
         self.title = title
     def update_screen(self,intertime=0.05):
         clear_screen()
         print(self.title)
         if self.cursor >= 4:print("...")
         for i in range(0,len(self.elements)):
-            if i+3 < self.cursor:
-                continue
+            if i+3 < self.cursor:continue
             if i == self.cursor: print(">>",end="")
             print(self.elements[i])
         delay(intertime)
@@ -80,21 +29,122 @@ class XemonityAM:
             open_alt_screen()
             while True:
                 self.update_screen()
+                pressed = get_key()
 
-                if is_windows():pressed = get_key_nt()
-                else:pressed = get_key_posix()
-
-                if pressed == "DOWN":
-                    self.cursor += 1
-                    if self.cursor >= len(self.elements):self.cursor = 0
-                    self.update_screen()
-                elif pressed == "UP":
-                    self.cursor -= 1
-                    if self.cursor <= -1:self.cursor = len(self.elements)-1
-                    self.update_screen()
-                elif pressed == "ENTER":
-                    close_alt_screen()
-                    return self.elements[self.cursor]
+                match pressed:
+                    case "DOWN":
+                        self.cursor += 1
+                        if self.cursor >= len(self.elements):self.cursor = 0
+                        self.update_screen()
+                    case "UP":
+                        self.cursor -= 1
+                        if self.cursor <= -1:self.cursor = len(self.elements)-1
+                        self.update_screen()
+                    case "ENTER":
+                        close_alt_screen()
+                        return self.elements[self.cursor]
         except:
             close_alt_screen()
             return ":CANCELED"
+
+class XmntUIList:
+    def __init__(self,title=""):
+        self.title = title
+        self.elements = []
+        self.cursor = 0
+
+        self._breakme = False
+    def connect_element(self,element):
+        """Add new element"""
+        element.uilist = self
+        self.elements.append(element)
+    def clear_elements_list(self):
+        """Remove all elements"""
+        for i in self.elements:i.uilist = None
+        self.elements.clear()
+    def out_of(self):
+        """Stop XmntUIList.show_sync()"""
+        self._breakme = True
+    def update_screen(self):
+        clear_screen()
+        print(self.title[:terminal_width()]+("_" * min(0,terminal_width() - len(self.title))))
+        
+        visible_height = terminal_height() - 2
+        if visible_height < 1: visible_height = 1
+        
+        offset = 0
+        if self.cursor >= visible_height:
+            offset = self.cursor - visible_height + 1
+
+        for i in range(offset, offset + visible_height):
+            if i >= len(self.elements):
+                break
+            if i == self.cursor:print("::",end="")
+            else: print("  ",end="")
+            self.elements[i].render()
+    def show_sync(self,intertime=0.05):
+        """Show interface"""
+        while True:
+            if self._breakme:
+                self._breakme = True
+                break
+            self.update_screen()
+            try:pr = get_key()
+            except KeyboardInterrupt:break
+
+            match pr:
+                case "DOWN":
+                    if self.cursor >= len(self.elements)-1:self.cursor = 0
+                    else:self.cursor += 1
+                    self.elements[self.cursor].when_acted("DOWN")
+                case "UP":
+                    if self.cursor <= 0:self.cursor = len(self.elements)-1
+                    else:self.cursor -= 1
+                    self.elements[self.cursor].when_acted("UP")
+                case "ENTER":
+                    self.elements[self.cursor].when_acted("ENTER")
+                case "LEFT":
+                    self.elements[self.cursor].when_acted("LEFT")
+                case "RIGHT":
+                    self.elements[self.cursor].when_acted("RIGHT")
+            delay(intertime)
+        to_out = {}
+        for i in self.elements:
+            to_out[i.realname] = i.stdout
+        clear_screen()
+        close_alt_screen()
+        return to_out
+
+class XUIL_Element:
+    def __init__(self,realname,name="XmntUIList template"):
+        """its init"""
+        self.uilist:XmntUIList = None
+        self.name = name
+        self.realname = realname
+        self.stdout = ""
+    def is_selected(self):
+        """Return true if cursor in element"""
+        return self.uilist.elements.count(self) >= 1
+    def when_acted(self,action:str):
+        """Called when user press arrows, enter and other buttons registred in get_key() method"""
+    def render(self):
+        """Called when XmntUIList.show_sync() try draw look"""
+        print(self.name)
+
+class Button(XUIL_Element):
+    def __init__(self,realname,title="Button"):
+        super().__init__(realname,title)
+        self.stdout = False
+    def when_acted(self, action):
+        if action == "ENTER":
+            self.stdout = True
+            self.uilist.out_of()
+    def render(self):
+        print("|"+self.name+"|")
+
+class Label(XUIL_Element):
+    def __init__(self, realname, label="template"):
+        super().__init__(realname, label)
+        self.label = label
+    def render(self):
+        print(self.label[:terminal_width() - (2 if self.is_selected else 0)])

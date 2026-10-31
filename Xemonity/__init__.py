@@ -3,4 +3,4 @@ try:
 except ImportError:
     from classes import *
 
-print("Hello from Xemonity\nGitHub : https://github.com/MurzikYEET/Xemonity")
+print("Hello from Xemonity UI 'framework'\nGitHub : https://github.com/MurzikYEET/Xemonity")

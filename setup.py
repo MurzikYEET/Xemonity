@@ -8,7 +8,7 @@ def readme():
 
 setup(
   name='xemonity',
-  version='4.0',
+  version='5.0',
   author='murzik_kukushnik',
   author_email='siniykoshara@gmail.com',
   description='Libraly for simple terminal ui',

@@ -86,7 +86,7 @@ class XmntUIList:
     def update_screen(self):
         clear_screen()
         if support_colorama:
-            print(colorama.Back.WHITE+
+            print(colorama.Back.WHITE+colorama.Fore.BLACK+
                   (self.title[:terminal_width()])+
                   (" " * (terminal_width() - len(self.title))))
             print(colorama.Style.RESET_ALL,end="")

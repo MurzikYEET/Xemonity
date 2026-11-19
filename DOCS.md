@@ -92,6 +92,6 @@ Returns terminal rows count
 Returns True if current OS is Microsoft Windows
 ## Binds
 ### before update
-Runned when `XmntUIList.show_sync()` start next iteration of cycle `while`
+Runned before `XmntUIList.show_sync()` start render UI
 ### after update
-Runned before `XmntUIList.show_sync()` starts next iteration of cycle `while`
+Runned after `XmntUIList.show_sync()` geted key from user

@@ -64,6 +64,25 @@ class Slider(
 )
 ```
 Default slider.\ `mini` is miniman value.\ `default` is standart.\ `maxi` is maximal value.\ `step` is count of steps, made when pressed `LEFT` or `RIGHT`
+### `Inputbox`
+```python
+class Inputbox(
+    realname: Any,
+    name: Any,
+    default: str = "Enter text",
+    desc: str = "Please enter text"
+)
+```
+Text input.`desc` is descripton showed when `Inputbox` pressed. Return inputed text.
+### `Dropdown`
+```python
+class Dropdown(
+    realname: Any,
+    name: Any,
+    elements: dict
+)
+```
+Dropdown menu.`elements` is `dict` of puncts in format `{"incode_name":"In TUI Name","other":"Other"}`. Return selected key.
 ## Methods
 ### `terminal_width()` 
 Returns terminal columns count

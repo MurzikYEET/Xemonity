@@ -1,5 +1,10 @@
 import os
 import sys
+try:
+    import colorama
+    support_colorama = True
+except:
+    support_colorama = False
 if os.name == "nt":
     import msvcrt
 else:
@@ -59,6 +64,14 @@ def get_key_nt(): #for NT-like os (Windows)
 def get_key(): #universal
     if is_windows():return get_key_nt()
     else:return get_key_posix()
+
+def print_title(message:str,colorwrite=False,background=colorama.Back.WHITE,foreground=colorama.Fore.BLACK):
+    clear_screen()
+    if colorwrite:
+        print(background,foreground,message," " * (terminal_width() - len(message) - 3),end="",sep="")
+        print(colorama.Style.RESET_ALL)
+    else:
+        print(message)    
 
 def min(minval,x):return x if x > minval else minval
 def is_windows():return os.name == "nt"

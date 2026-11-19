@@ -4,6 +4,11 @@ class MyElement(XUIL_Element):
     def __init__(self, realname, label="hi"):
         super().__init__(realname, label)
         self.label = label
+    def when_acted(self, action):
+        if action == "ENTER": #also can LEFT RIGHT UP DOWN
+            clear_screen()
+            print("Hello world!")
+            input()
     def render(self):
         print(self.label[:terminal_width() - (2 if self.is_selected else 0)])
 

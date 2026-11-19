@@ -10,18 +10,16 @@ except:
 
 class XemonityAM:
     def __init__(self,elements:list,title:str,append_cancel=True):
-        """WARNING : this class deprecated, please use XmntUIList with Button class"""
+        """Old class for list of texts"""
         self.cursor = 0
         self.elements = elements
         if append_cancel:self.elements.append(":Cancel")
         self.title = title
     def update_screen(self,intertime=0.05):
-        clear_screen()
-        print(self.title)
-        if self.cursor >= 4:print("...")
-        for i in range(0,len(self.elements)):
-            if i+3 < self.cursor:continue
-            if i == self.cursor: print(">>",end="")
+        print_title(self.title,support_colorama)
+        #if self.cursor > 1:print("...")
+        for i in range(self.cursor,len(self.elements)):
+            if i == self.cursor:print(">>",end="")
             print(self.elements[i])
         delay(intertime)
     def relist(self,newlist:list):
@@ -50,6 +48,7 @@ class XemonityAM:
         except:
             close_alt_screen()
             return ":CANCELED"
+XmntLegacyMenu = XemonityAM #alias for XemonityAM legacy class
 
 class XmntUIList:
     def __init__(self,title=""):
@@ -88,20 +87,23 @@ class XmntUIList:
         if support_colorama:
             print(colorama.Back.WHITE+colorama.Fore.BLACK+
                   (self.title[:terminal_width()])+
-                  (" " * (terminal_width() - len(self.title))))
+                  ("^^^" if self.cursor > 0 else "")+
+                  (" " * (terminal_width() - len(self.title) - (3 if self.cursor > 0 else 0))))
             print(colorama.Style.RESET_ALL,end="")
         else:
             print(self.title[:terminal_width()]+
-                  ("_" * min(0,terminal_width() - len(self.title))))
+                  ("^^^" if self.cursor > 0 else "")+
+                  ("_" * min(0,terminal_width() - len(self.title) - (3 if self.cursor > 0 else 0))))
         
-        visible_height = terminal_height() - 2
-        if visible_height < 1: visible_height = 1
-        
-        offset = 0
-        if self.cursor >= visible_height:
-            offset = self.cursor - visible_height + 1
+        #visible_height = terminal_height() - 2
+        #if visible_height < 1: visible_height = 1
+        #
+        #offset = 0
+        #if self.cursor >= visible_height:
+        #    offset = self.cursor - visible_height + 1
 
-        for i in range(offset, offset + visible_height):
+        #for i in range(offset, offset + visible_height):
+        for i in range(self.cursor,len(self.elements)):
             if i >= len(self.elements):
                 break
             if i == self.cursor:print("::",end="")
@@ -161,6 +163,7 @@ class XUIL_Element:
         print(self.name)
 
 class Button(XUIL_Element):
+    """Pressable element"""
     def __init__(self,realname,title="Button",on_click=None):
         super().__init__(realname,title)
         self.on_click = on_click
@@ -174,6 +177,7 @@ class Button(XUIL_Element):
         print("|"+self.name+"|")
 
 class Label(XUIL_Element):
+    """Label element"""
     def __init__(self, realname, label="I lable"):
         super().__init__(realname, label)
         self.label = label
@@ -181,7 +185,8 @@ class Label(XUIL_Element):
         print(self.label[:terminal_width() - (2 if self.is_selected else 0)])
 
 class Checkbox(XUIL_Element):
-    def __init__(self, realname, name="Checkbox",default=False):
+    """Checkbox element"""
+    def __init__(self, realname, name,default=False):
         super().__init__(realname, name)
         self.stdout = default
     def when_acted(self, action):
@@ -191,7 +196,8 @@ class Checkbox(XUIL_Element):
         print(self.name + " : " + ("▉▉" if self.stdout else "░░"))
 
 class Slider(XUIL_Element):
-    def __init__(self, realname, name="Slider", mini=0, default=50, maxi=100, step=1):
+    """Slider element"""
+    def __init__(self, realname, name, mini=0, default=50, maxi=100, step=1):
         super().__init__(realname, name)
         self.min = mini
         self.max = maxi
@@ -206,3 +212,37 @@ class Slider(XUIL_Element):
         to_fill = int(normalized * bar_width)
         to_skip = bar_width - to_fill
         print(self.name + f"({self.stdout})" + ":::" + ("▉" * to_fill) + ("░" * to_skip))
+    
+class Inputbox(XUIL_Element):
+    def __init__(self, realname, name,default="Enter text",desc="Please enter text"):
+        """Text input element"""
+        super().__init__(realname, name)
+        self.stdout = default
+        self.desc = desc
+    def when_acted(self, action):
+        if action == "ENTER":
+            print_title(self.uilist.title+" > "+self.name,support_colorama)
+            resized_desc = self.desc.split("\n")[:terminal_height()]
+            for i in resized_desc:print(i)
+            self.stdout = input(self.name + " >> ")
+    def render(self):
+        print(self.name + " >> " + self.stdout)
+
+class Dropdown(XUIL_Element):
+    def __init__(self, realname, name, elements:dict):
+        """Dropdown element"""
+        super().__init__(realname, name)
+        self.elements = elements
+        self._cursor = 0
+        self.stdout = list(self.elements.keys())[0]
+    def when_acted(self, action):
+        if action == "ENTER":
+            els = XmntLegacyMenu(list(self.elements.values()),self.uilist.title+" > "+self.name)
+            els.show_sync()
+            try:self.stdout = list(self.elements.keys())[els.cursor]
+            except IndexError:self.stdout = ":CANCELED"
+    def render(self):
+        if self.stdout == ":CANCELED":
+            print(self.name+" :: CANCELED")
+            return
+        print(self.name+" :: "+self.elements[self.stdout])
